@@ -1,7 +1,4 @@
-import random
 import cerberus
-import jsonschema
-from jsonschema import validate
 import requests
 import re
 import pytest
@@ -46,7 +43,7 @@ def test_get_all_breeds():
     try:
         assert valid.validate(data, all_breeds_schema)
     except AttributeError:
-        AttributeError(data)
+        raise AttributeError(data)
 
 
 def test_by_breed():
@@ -65,7 +62,7 @@ def test_by_breed():
     try:
         assert valid.validate(data, by_breed_schema)
     except AttributeError:
-        AttributeError(data)
+        raise AttributeError(data)
 
 
 def test_all_images_of_sub_breed():
