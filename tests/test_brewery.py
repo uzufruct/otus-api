@@ -26,23 +26,24 @@ brewery_schema = {
 }
 
 
-def test_random():
+def test_get_random():
     response = requests.get(base_url + 'random')
     data = response.json()
+    assert response.status_code == 200
     try:
         validate(instance=data, schema=brewery_schema)
     except AttributeError:
         raise AttributeError(data)
 
 
-def test_autocomplete():
+def test_get_autocomplete():
     response = requests.get(base_url + 'autocomplete?query=dog')
     data = response.json()
     assert response.status_code == 200
     assert len(data) == 39
 
 
-def test_list_default():
+def test_get_list_default():
     response = requests.get(base_url)
     data = response.json()
     assert response.status_code == 200
@@ -56,7 +57,7 @@ def test_list_default():
     (50, 50),
     (51, 50)
 ])
-def test_list_per_rage(test_input, expected):
+def test_get_list_per_rage(test_input, expected):
     response = requests.get(base_url + '?per_page=' + str(test_input))
     data = response.json()
     assert response.status_code == 200
@@ -68,7 +69,7 @@ def test_list_per_rage(test_input, expected):
     ("dallas", "Dallas"),
     ("new_york", "New York")
 ])
-def test_search_by_city(test_input, expected):
+def test_get_search_by_city(test_input, expected):
     response = requests.get(base_url + '?by_city=' + str(test_input))
     data = response.json()
     assert response.status_code == 200
