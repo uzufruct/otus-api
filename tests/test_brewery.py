@@ -1,0 +1,104 @@
+import requests
+import pytest
+from jsonschema import validate
+
+base_url = 'https://api.openbrewerydb.org/breweries/'
+brewery_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "array",
+    "items": [
+        {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ]
+        }
+    ]
+}
+
+meta_schema = {
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "total": {
+      "type": "string"
+    },
+    "page": {
+      "type": "string"
+    },
+    "per_page": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "total",
+    "page",
+    "per_page"
+  ]
+}
+
+
+def test_get_random():
+    response = requests.get(base_url + 'random')
+    data = response.json()
+    assert response.status_code == 200
+    try:
+        validate(instance=data, schema=brewery_schema)
+    except AttributeError:
+        raise AttributeError(data)
+
+
+def test_get_meta():
+    response = requests.get(base_url + 'meta')
+    data = response.json()
+    assert response.status_code == 200
+    try:
+        validate(instance=data, schema=meta_schema)
+    except AttributeError:
+        raise AttributeError(data)
+    assert data['page'] == '1'
+    assert data['per_page'] == '20'
+
+
+def test_get_list_default():
+    response = requests.get(base_url)
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) == 20
+
+
+@pytest.mark.parametrize("test_input, expected", [
+    (1, 1),
+    (2, 2),
+    (49, 49),
+    (50, 50),
+    (51, 50)
+])
+def test_get_list_per_rage(test_input, expected):
+    response = requests.get(base_url + '?per_page=' + str(test_input))
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) == expected
+
+
+@pytest.mark.parametrize("test_input, expected", [
+    ("san_diego", "San Diego"),
+    ("dallas", "Dallas"),
+    ("new_york", "New York")
+])
+def test_get_search_by_city(test_input, expected):
+    response = requests.get(base_url + '?by_city=' + str(test_input))
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) <= 20
+    for brewery in data:
+        assert brewery["city"] == expected
