@@ -25,6 +25,27 @@ brewery_schema = {
     ]
 }
 
+meta_schema = {
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "total": {
+      "type": "string"
+    },
+    "page": {
+      "type": "string"
+    },
+    "per_page": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "total",
+    "page",
+    "per_page"
+  ]
+}
+
 
 def test_get_random():
     response = requests.get(base_url + 'random')
@@ -36,11 +57,16 @@ def test_get_random():
         raise AttributeError(data)
 
 
-def test_get_autocomplete():
-    response = requests.get(base_url + 'autocomplete?query=dog')
+def test_get_meta():
+    response = requests.get(base_url + 'meta')
     data = response.json()
     assert response.status_code == 200
-    assert len(data) == 39
+    try:
+        validate(instance=data, schema=meta_schema)
+    except AttributeError:
+        raise AttributeError(data)
+    assert data['page'] == '1'
+    assert data['per_page'] == '20'
 
 
 def test_get_list_default():

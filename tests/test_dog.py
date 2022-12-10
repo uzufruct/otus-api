@@ -2,6 +2,7 @@ import cerberus
 import requests
 import re
 import pytest
+from jsonschema import validate
 
 base_url = 'https://dog.ceo/api/'
 image_pattern = re.compile(r"https://images\.dog\.ceo/breeds/\S+/(\S|_)+\.\w+")
@@ -27,12 +28,21 @@ def test_get_random(count):
 
 def test_get_all_breeds():
     all_breeds_schema = {
-        'message': {'type': 'list',
-                    'required': True,
-                    'schema': {'type': 'list'}},
-        'status': {'type': 'string', 'required': True}
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "type": "object",
+        "properties": {
+            "message": {
+                "type": "object"
+            },
+            "status": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "message",
+            "status"
+        ]
     }
-    valid = cerberus.Validator
     response = requests.get(base_url + 'breeds/list/all')
     data = response.json()
     assert response.status_code == 200
@@ -41,15 +51,27 @@ def test_get_all_breeds():
     except AssertionError:
         raise AssertionError(data)
     try:
-        assert valid.validate(data, all_breeds_schema)
+        validate(instance=data, schema=all_breeds_schema)
     except AttributeError:
         raise AttributeError(data)
 
 
 def test_by_breed():
     by_breed_schema = {
-        'message': {'type': 'list', 'required': True},
-        'status': {'type': 'string', 'required': True}
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "type": "object",
+        "properties": {
+            "message": {
+                "type": "array"
+            },
+            "status": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "message",
+            "status"
+        ]
     }
     valid = cerberus.Validator
     response = requests.get(base_url + 'breed/hound/images')
@@ -60,7 +82,7 @@ def test_by_breed():
     except AssertionError:
         raise AssertionError(data)
     try:
-        assert valid.validate(data, by_breed_schema)
+        validate(instance=data, schema=by_breed_schema)
     except AttributeError:
         raise AttributeError(data)
 
